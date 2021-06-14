@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 logger = logging.getLogger(__name__)
 
 engine = create_engine(
-    os.environ.get('DATABASE_URL'),
+    os.environ.get('DATABASE_URL').replace("postgres", "postgresql"),
     encoding="utf-8",
     echo=False
 )

@@ -1,0 +1,31 @@
+version: "3.6"
+
+networks:
+  discordbot-net:
+    driver: bridge
+
+services:
+  bot:
+    container_name: CLGHouseBot
+    build:
+        context: ./
+        dockerfile: Dockerfile
+    env_file:
+        - bot.env
+    networks:
+        - discordbot-net
+    depends_on:
+        - database
+
+  database:
+    container_name: database
+    image: postgres:11.6-alpine
+    restart: always
+    ports:
+        - "15432:5432"
+    environment:
+        POSTGRES_DB: "CLGHouseBot"
+        POSTGRES_USER: "CLGHouseBot"
+        POSTGRES_PASSWORD: "mysecretpassword"
+    networks:
+        - discordbot-net

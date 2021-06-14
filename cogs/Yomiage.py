@@ -31,16 +31,22 @@ class Yomiage(commands.Cog):
 
     @tasks.loop(seconds=10.0)
     async def auto_disconnect(self):
-        members = self.vc.channel.members
-        users = [user for user in members if user != self.bot.user]
-        if len(users) <= 0:
-            await self.vc.disconnect()
-            self.vc = None
-            self.yomiage_channel_name = None
+        if self.vc is None:
             self.retry_play.stop()  # キューの消化を止める
             self.clear_play_queue()  # キューの中身をクリアする
-            return self.auto_disconnect.stop()  # VCに人が居なくなったら自動切断する監視を停止
-        return
+            return self.auto_disconnect.stop()  # 異常状態になってるので監視ループも止める
+
+        # members = self.vc.channel.members
+        # users = [user for user in members if user != self.bot.user]
+        #
+        # if len(users) <= 0:
+        #     await self.vc.disconnect()
+        #     self.vc = None
+        #     self.yomiage_channel_name = None
+        #     self.retry_play.stop()  # キューの消化を止める
+        #     self.clear_play_queue()  # キューの中身をクリアする
+        #     return self.auto_disconnect.stop()  # VCに人が居なくなったら自動切断する監視を停止
+        # return
 
     async def reconnect(self):
         await self.vc.disconnect()
@@ -174,16 +180,16 @@ class Yomiage(commands.Cog):
         """ Google Cloud Text-to-Speech を利用してssmlから音声ファイルを生成する """
         client = texttospeech.TextToSpeechClient()
 
-        synthesis_input = texttospeech.types.SynthesisInput(ssml=ssml)
+        synthesis_input = texttospeech.SynthesisInput(ssml=ssml)
 
-        voice = texttospeech.types.VoiceSelectionParams(
+        voice = texttospeech.VoiceSelectionParams(
             language_code='ja-JP',
-            ssml_gender=texttospeech.enums.SsmlVoiceGender.FEMALE)
+            ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL)
 
-        audio_config = texttospeech.types.AudioConfig(
-            audio_encoding=texttospeech.enums.AudioEncoding.MP3)
+        audio_config = texttospeech.AudioConfig(
+            audio_encoding=texttospeech.AudioEncoding.MP3)
 
-        return client.synthesize_speech(synthesis_input, voice, audio_config)
+        return client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
